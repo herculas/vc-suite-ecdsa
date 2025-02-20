@@ -1,0 +1,54 @@
+/**
+ * The DER prefix for an ECDSA P-256 private key, which could be decomposed as follows:
+ *
+ *    - `0x30 0x81 0x87`: `SEQUENCE` of 135 bytes
+ *        - `0x02 0x01`: `INTEGER` of 1 byte
+ *            - `0x00`: Version 0
+ *        - `0x30 0x13`: `SEQUENCE` of 19 bytes
+ *            - `0x06 0x07 0x2a8648ce3d0201`: `OID` for algorithm of 7 bytes, 1.2.840.10045.2.1 (ANSI X9.62 public key)
+ *            - `0x06 0x08 0x2a8648ce3d030107`: `OID` for curve of 8 bytes, 1.2.840.10045.3.1.7 (NIST P-256)
+ *        - `0x04 0x6d`: `OCTET STRING` of 109 bytes
+ *            - `0x30 0x6b`: `SEQUENCE` of 107 bytes
+ *                - `0x02 0x01`: `INTEGER` of 1 byte
+ *                    - `0x01`: Integer 1
+ *                - `0x04 0x20`: `OCTET STRING` of 32 bytes
+ *                    - `...`: Private key
+ */
+export const PRIVATE_KEY_256_DER = new Uint8Array([
+  0x30,
+  0x81,
+  0x87,
+  0x02,
+  0x01,
+  0x00,
+  0x30,
+  0x13,
+  0x06,
+  0x07,
+  0x2a,
+  0x86,
+  0x48,
+  0xce,
+  0x3d,
+  0x02,
+  0x01,
+  0x06,
+  0x08,
+  0x2a,
+  0x86,
+  0x48,
+  0xce,
+  0x3d,
+  0x03,
+  0x01,
+  0x07,
+  0x04,
+  0x6d,
+  0x30,
+  0x6b,
+  0x02,
+  0x01,
+  0x01,
+  0x04,
+  0x20,
+])
