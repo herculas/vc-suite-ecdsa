@@ -3,7 +3,9 @@
     "cryptosuite",
     "denoland",
     "herculas",
+    "JWKEC",
     "KEYPAIR",
+    "MULTIBASE",
     "Multikey"
   ]
 }

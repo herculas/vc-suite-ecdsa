@@ -1,15 +1,15 @@
 {
   "version": "4",
   "specifiers": {
-    "jsr:@herculas/vc-data-integrity@~0.8.7": "0.8.7",
+    "jsr:@herculas/vc-data-integrity@~0.8.9": "0.8.9",
     "jsr:@std/assert@1": "1.0.11",
     "jsr:@std/encoding@^1.0.7": "1.0.7",
     "jsr:@std/internal@^1.0.5": "1.0.5",
     "npm:jsonld@^8.3.2": "8.3.3"
   },
   "jsr": {
-    "@herculas/vc-data-integrity@0.8.7": {
-      "integrity": "7366ed566e4238b362c5ff2cad93a442312d65e21ffddd2a3180230733d601fc",
+    "@herculas/vc-data-integrity@0.8.9": {
+      "integrity": "25ac4fb77b13c1d0131b26ae24dd54525b2667b63eb37baef8199e5c2bac102b",
       "dependencies": [
         "jsr:@std/assert",
         "jsr:@std/encoding",
@@ -130,7 +130,7 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@herculas/vc-data-integrity@~0.8.7",
+      "jsr:@herculas/vc-data-integrity@~0.8.9",
       "jsr:@std/assert@1"
     ]
   }
