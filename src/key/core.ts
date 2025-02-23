@@ -48,8 +48,8 @@ export async function keyToMaterial(key: CryptoKey, flag: KeypairOptions.Flag): 
   }
 
   const keyFormat = SUITE_CONSTANT.KEY_FORMAT.get(flag)
-  const expectedPrefixHex = PREFIX_CONSTANT.DER_UNCOMPRESSED.get(flag)?.get(curve)
   const keyLength = SUITE_CONSTANT.KEY_MATERIAL_LENGTH.get(flag)?.get(curve)
+  const expectedPrefixHex = PREFIX_CONSTANT.DER_UNCOMPRESSED.get(flag)?.get(curve)
 
   if (!keyFormat || !expectedPrefixHex || !keyLength) {
     throw new ImplementationError(
@@ -75,11 +75,11 @@ export async function keyToMaterial(key: CryptoKey, flag: KeypairOptions.Flag): 
 }
 
 /**
- * Calculate the thumbprint of a JWK instance using SHA-256 hash algorithm.
+ * Calculate the thumbprint of a `JWK` instance using SHA-256 hash algorithm.
  *
  * @param {JWK} jwk A JSON Web Key instance.
  *
- * @returns {Promise<string>} Resolve to the thumbprint of the JWK instance.
+ * @returns {Promise<string>} Resolve to the thumbprint of the `JWK` instance.
  */
 export async function getJwkThumbprint(jwk: JWK): Promise<string> {
   const data = new TextEncoder().encode(JSON.stringify(jwk))
