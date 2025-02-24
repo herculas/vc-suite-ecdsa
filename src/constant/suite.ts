@@ -10,6 +10,9 @@ export const KEYPAIR_DOCUMENT_TYPE_MULTI = "Multikey"
 export const KEYPAIR_DOCUMENT_TYPE_JWK = "JsonWebKey"
 
 export const GENERAL_PROOF_TYPE = "DataIntegrityProof"
+export const SUITE_RDFC = "ecdsa-rdfc-2019"
+export const SUITE_JCS = "ecdsa-jcs-2019"
+export const SUITE_SD = "ecdsa-sd-2023"
 
 export const KEY_FORMAT: Map<KeypairOptions.Flag, "pkcs8" | "spki"> = new Map([
   ["public", "spki"],

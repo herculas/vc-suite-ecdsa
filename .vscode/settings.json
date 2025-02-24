@@ -8,6 +8,8 @@
     "MULTIBASE",
     "multicodec",
     "Multikey",
+    "Rdfc",
+    "URDNA",
     "varint"
   ]
 }
