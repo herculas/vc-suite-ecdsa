@@ -6,6 +6,8 @@
     "JWKEC",
     "KEYPAIR",
     "MULTIBASE",
-    "Multikey"
+    "multicodec",
+    "Multikey",
+    "varint"
   ]
 }

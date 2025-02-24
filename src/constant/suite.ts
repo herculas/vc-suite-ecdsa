@@ -16,7 +16,14 @@ export const KEY_FORMAT: Map<KeypairOptions.Flag, "pkcs8" | "spki"> = new Map([
   ["private", "pkcs8"],
 ])
 
-export const KEY_MATERIAL_LENGTH: Map<KeypairOptions.Flag, Map<Curve, number>> = new Map([
+export const KEY_UNCOMPRESSED_LENGTH: Map<KeypairOptions.Flag, Map<Curve, number>> = new Map([
   ["public", new Map([[Curve.P256, 64], [Curve.P384, 96]])],
   ["private", new Map([[Curve.P256, 32], [Curve.P384, 48]])],
 ])
+
+export const KEY_COMPRESSED_LENGTH: Map<KeypairOptions.Flag, Map<Curve, number>> = new Map([
+  ["public", new Map([[Curve.P256, 33], [Curve.P384, 49]])],
+  ["private", new Map([[Curve.P256, 32], [Curve.P384, 48]])],
+])
+
+export const KEY_MATERIAL_FOOTER_LENGTH = 6

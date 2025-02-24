@@ -1,0 +1,14 @@
+{
+  "@context": "https://www.w3.org/ns/cid/v1",
+  "id": "did:key:zDnaepBuvsQ8cpsWrVKw8fbpGpvPeNSjVPTWoq6cRqaYzBKVP",
+  "verificationMethod": [{
+    "id": "did:key:zDnaepBuvsQ8cpsWrVKw8fbpGpvPeNSjVPTWoq6cRqaYzBKVP#zDnaepBuvsQ8cpsWrVKw8fbpGpvPeNSjVPTWoq6cRqaYzBKVP",
+    "type": "Multikey",
+    "controller": "did:key:zDnaepBuvsQ8cpsWrVKw8fbpGpvPeNSjVPTWoq6cRqaYzBKVP",
+    "publicKeyMultibase": "zDnaewQRj3HP1mXkKhPsDp3fFjCK5ZZ6TVA25Z7NxefjYpAiM",
+    "secretKeyMultibase": "z42tra53sKFmLR5opJxN8jWPhcPMJLc3N39L2ZMF6XNGyWVp"
+  }],
+  "assertionMethod": [
+    "did:key:zDnaepBuvsQ8cpsWrVKw8fbpGpvPeNSjVPTWoq6cRqaYzBKVP#zDnaepBuvsQ8cpsWrVKw8fbpGpvPeNSjVPTWoq6cRqaYzBKVP"
+  ]
+}

@@ -3,6 +3,50 @@ import type { KeypairOptions } from "@herculas/vc-data-integrity"
 import { Curve } from "./curve.ts"
 
 /**
+ * The encoding of an ECDSA P-256 public key MUST start with the two-byte prefix `0x8024` (the varint expression of
+ * `0x1200`) followed by the 33-byte compressed public key data.
+ *
+ * The resulting 35-byte value MUST be encoded using the base-58-btc alphabet, and then prepended with the base-58-btc
+ * Multibase header `z`.
+ *
+ * @see https://www.w3.org/TR/cid/#Multikey
+ */
+const PUBLIC_KEY_MULTIBASE_256 = "8024"
+
+/**
+ * The encoding of an ECDSA P-384 public key MUST start with the two-byte prefix `0x8124` (the varint expression of
+ * `0x1201`) followed by the 49-byte compressed public key data.
+ *
+ * The resulting 51-byte value MUST be encoded using the base-58-btc alphabet, and then prepended with the base-58-btc
+ * Multibase header `z`.
+ *
+ * @see https://www.w3.org/TR/cid/#Multikey
+ */
+const PUBLIC_KEY_MULTIBASE_384 = "8124"
+
+/**
+ * The encoding of an ECDSA P-256 private key MUST start with the two-byte prefix `0x8626` (the varint expression of
+ * `0x1306`) followed by the 32-byte private key data.
+ *
+ * The resulting 34-byte value MUST be encoded using the base-58-btc alphabet, and then prepended with the base-58-btc
+ * Multibase header `z`.
+ *
+ * @see https://www.w3.org/TR/cid/#Multikey
+ */
+const PRIVATE_KEY_MULTIBASE_256 = "8626"
+
+/**
+ * The encoding of an ECDSA P-384 private key MUST start with the two-byte prefix `0x8726` (the varint expression of
+ * `0x1307`) followed by the 48-byte private key data.
+ *
+ * The resulting 50-byte value MUST be encoded using the base-58-btc alphabet, and then prepended with the base-58-btc
+ * Multibase header `z`.
+ *
+ * @see https://www.w3.org/TR/cid/#Multikey
+ */
+const PRIVATE_KEY_MULTIBASE_384 = "8726"
+
+/**
  * The DER prefix for an ECDSA P-256 public key in SPKI format, which could be decomposed as follows:
  *
  * - `3059`: `SEQUENCE` (89 bytes in total)
@@ -109,6 +153,23 @@ const PRIVATE_KEY_COMPRESSED_256 = "3067020100301306072a8648ce3d020106082a8648ce
  * - `0430`: `OCTET STRING` (48 bytes following, representing the private key)
  */
 const PRIVATE_KEY_COMPRESSED_384 = "308184020100301006072a8648ce3d020106052b81040022046d306b0201010430"
+
+export const MULTIBASE: Map<KeypairOptions.Flag, Map<Curve, string>> = new Map([
+  [
+    "public",
+    new Map([
+      [Curve.P256, PUBLIC_KEY_MULTIBASE_256],
+      [Curve.P384, PUBLIC_KEY_MULTIBASE_384],
+    ]),
+  ],
+  [
+    "private",
+    new Map([
+      [Curve.P256, PRIVATE_KEY_MULTIBASE_256],
+      [Curve.P384, PRIVATE_KEY_MULTIBASE_384],
+    ]),
+  ],
+])
 
 export const DER_COMPRESSED: Map<KeypairOptions.Flag, Map<Curve, string>> = new Map([
   [
