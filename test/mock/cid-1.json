@@ -5,8 +5,8 @@
     "id": "did:key:zDnaepBuvsQ8cpsWrVKw8fbpGpvPeNSjVPTWoq6cRqaYzBKVP#zDnaepBuvsQ8cpsWrVKw8fbpGpvPeNSjVPTWoq6cRqaYzBKVP",
     "type": "Multikey",
     "controller": "did:key:zDnaepBuvsQ8cpsWrVKw8fbpGpvPeNSjVPTWoq6cRqaYzBKVP",
-    "publicKeyMultibase": "zDnaewQRj3HP1mXkKhPsDp3fFjCK5ZZ6TVA25Z7NxefjYpAiM",
-    "secretKeyMultibase": "z42tra53sKFmLR5opJxN8jWPhcPMJLc3N39L2ZMF6XNGyWVp"
+    "publicKeyMultibase": "zDnaepBuvsQ8cpsWrVKw8fbpGpvPeNSjVPTWoq6cRqaYzBKVP",
+    "secretKeyMultibase": "z42twTcNeSYcnqg1FLuSFs2bsGH3ZqbRHFmvS9XMsYhjxvHN"
   }],
   "assertionMethod": [
     "did:key:zDnaepBuvsQ8cpsWrVKw8fbpGpvPeNSjVPTWoq6cRqaYzBKVP#zDnaepBuvsQ8cpsWrVKw8fbpGpvPeNSjVPTWoq6cRqaYzBKVP"

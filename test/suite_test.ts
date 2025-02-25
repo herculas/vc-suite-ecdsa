@@ -1,16 +1,18 @@
-import { assert, assertEquals, assertExists } from "@std/assert"
-import { base58btc, type Credential, type Proof } from "@herculas/vc-data-integrity"
+import { assert, assertEquals } from "@std/assert"
+import { type Credential, format, type Proof } from "@herculas/vc-data-integrity"
 
 import { configRdfc, hash, serialize, transformRdfc, verify } from "../src/suite/core.ts"
+import { Curve } from "../src/constant/curve.ts"
 import { EcdsaRdfc2019 } from "../src/suite/rdfc.ts"
+import { EcdsaJcs2019 } from "../src/suite/jcs.ts"
 import { testLoader } from "./mock/loader.ts"
 
 import * as UNSECURED_CRED_1 from "./mock/unsecured-credential-1.json" with { type: "json" }
+import * as UNSECURED_CRED_2 from "./mock/unsecured-credential-2.json" with { type: "json" }
 import * as PROOF_OPTIONS_1 from "./mock/proof-options-1.json" with { type: "json" }
-import { Curve } from "../src/constant/curve.ts"
-
-const bytesToHex = (arr: Uint8Array) => arr.reduce((acc, i) => acc + i.toString(16).padStart(2, "0"), "")
-const hexToBytes = (hex: string) => new Uint8Array(hex.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16)))
+import * as PROOF_OPTIONS_2 from "./mock/proof-options-2.json" with { type: "json" }
+import * as PROOF_OPTIONS_3 from "./mock/proof-options-3.json" with { type: "json" }
+import * as PROOF_OPTIONS_4 from "./mock/proof-options-4.json" with { type: "json" }
 
 Deno.test("ECDSA-RDFC-2019 document and proof hashing", async () => {
   const unsecuredCredential = structuredClone(UNSECURED_CRED_1.default) as Credential
@@ -26,7 +28,7 @@ Deno.test("ECDSA-RDFC-2019 document and proof hashing", async () => {
   const expectedDocumentHash = "517744132ae165a5349155bef0bb0cf2258fff99dfe1dbd914b938d775a36017"
   const expectedProofHash = "3a8a522f689025727fb9d1f0fa99a618da023e8494ac74f51015d009d35abc2e"
 
-  assertEquals(bytesToHex(hashData), expectedProofHash + expectedDocumentHash)
+  assertEquals(format.bytesToHex(hashData), expectedProofHash + expectedDocumentHash)
 })
 
 Deno.test("ECDSA-RDFC-2019 proof creation and verification", async () => {
@@ -36,9 +38,112 @@ Deno.test("ECDSA-RDFC-2019 proof creation and verification", async () => {
   const proofHash = "3a8a522f689025727fb9d1f0fa99a618da023e8494ac74f51015d009d35abc2e"
   const hashData = proofHash + documentHash
 
-  const options = { curve: Curve.P256, proof: proofOptions, documentLoader: testLoader }
-  const proofBytes = await serialize(hexToBytes(hashData), options)
-  const result = await verify(hexToBytes(hashData), proofBytes, options)
+  const curve = Curve.P256
+  const options = { curve, proof: proofOptions, documentLoader: testLoader }
+  const proofBytes = await serialize(format.hexToBytes(hashData), options)
+  const result = await verify(format.hexToBytes(hashData), proofBytes, options)
 
   assert(result)
+})
+
+Deno.test("ECDSA-RDFC-2019 proof creation and verification encapsulated (P-256)", async () => {
+  const unsecuredCredential = structuredClone(UNSECURED_CRED_1.default) as Credential
+  const proofOptions = structuredClone(PROOF_OPTIONS_1.default) as Proof
+
+  const curve = Curve.P256
+  const proveOptions = { curve, proof: proofOptions, documentLoader: testLoader }
+  const proof = await EcdsaRdfc2019.createProof(unsecuredCredential, proveOptions)
+
+  const securedCredential = unsecuredCredential
+  securedCredential.proof = proof
+
+  const verifyOptions = { curve, documentLoader: testLoader }
+  const result = await EcdsaRdfc2019.verifyProof(securedCredential, verifyOptions)
+
+  assert(result.verified)
+})
+
+Deno.test("ECDSA-RDFC-2019 proof creation and verification encapsulated 2 (P-256)", async () => {
+  const unsecuredCredential = structuredClone(UNSECURED_CRED_2.default) as Credential
+  const proofOptions = structuredClone(PROOF_OPTIONS_1.default) as Proof
+
+  const curve = Curve.P256
+  const proveOptions = { curve, proof: proofOptions, documentLoader: testLoader }
+  const proof = await EcdsaRdfc2019.createProof(unsecuredCredential, proveOptions)
+
+  const securedCredential = unsecuredCredential
+  securedCredential.proof = proof
+
+  const verifyOptions = { curve, documentLoader: testLoader }
+  const result = await EcdsaRdfc2019.verifyProof(securedCredential, verifyOptions)
+
+  assert(result.verified)
+})
+
+Deno.test("ECDSA-RDFC-2019 proof creation and verification encapsulated (P-384)", async () => {
+  const unsecuredCredential = structuredClone(UNSECURED_CRED_1.default) as Credential
+  const proofOptions = structuredClone(PROOF_OPTIONS_2.default) as Proof
+
+  const curve = Curve.P384
+  const proveOptions = { curve, proof: proofOptions, documentLoader: testLoader }
+  const proof = await EcdsaRdfc2019.createProof(unsecuredCredential, proveOptions)
+
+  const securedCredential = unsecuredCredential
+  securedCredential.proof = proof
+
+  const verifyOptions = { curve, documentLoader: testLoader }
+  const result = await EcdsaRdfc2019.verifyProof(securedCredential, verifyOptions)
+
+  assert(result.verified)
+})
+
+Deno.test("ECDSA-RDFC-2019 proof creation and verification encapsulated 2 (P-384)", async () => {
+  const unsecuredCredential = structuredClone(UNSECURED_CRED_2.default) as Credential
+  const proofOptions = structuredClone(PROOF_OPTIONS_2.default) as Proof
+
+  const curve = Curve.P384
+  const proveOptions = { curve, proof: proofOptions, documentLoader: testLoader }
+  const proof = await EcdsaRdfc2019.createProof(unsecuredCredential, proveOptions)
+
+  const securedCredential = unsecuredCredential
+  securedCredential.proof = proof
+
+  const verifyOptions = { curve, documentLoader: testLoader }
+  const result = await EcdsaRdfc2019.verifyProof(securedCredential, verifyOptions)
+
+  assert(result.verified)
+})
+
+Deno.test("ECDSA-JCS-2019 proof creation and verification encapsulated (P-256)", async () => {
+  const unsecuredCredential = structuredClone(UNSECURED_CRED_1.default) as Credential
+  const proofOptions = structuredClone(PROOF_OPTIONS_3.default) as Proof
+
+  const curve = Curve.P256
+  const proveOptions = { curve, proof: proofOptions, documentLoader: testLoader }
+  const proof = await EcdsaJcs2019.createProof(unsecuredCredential, proveOptions)
+
+  const securedCredential = unsecuredCredential
+  securedCredential.proof = proof
+
+  const verifyOptions = { curve, documentLoader: testLoader }
+  const result = await EcdsaJcs2019.verifyProof(securedCredential, verifyOptions)
+
+  assert(result.verified)
+})
+
+Deno.test("ECDSA-JCS-2019 proof creation and verification encapsulated (P-384)", async () => {
+  const unsecuredCredential = structuredClone(UNSECURED_CRED_1.default) as Credential
+  const proofOptions = structuredClone(PROOF_OPTIONS_4.default) as Proof
+
+  const curve = Curve.P384
+  const proveOptions = { curve, proof: proofOptions, documentLoader: testLoader }
+  const proof = await EcdsaJcs2019.createProof(unsecuredCredential, proveOptions)
+
+  const securedCredential = unsecuredCredential
+  securedCredential.proof = proof
+
+  const verifyOptions = { curve, documentLoader: testLoader }
+  const result = await EcdsaJcs2019.verifyProof(securedCredential, verifyOptions)
+
+  assert(result.verified)
 })

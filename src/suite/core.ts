@@ -2,6 +2,7 @@ import {
   type Credential,
   document,
   format,
+  jcs,
   type Loader,
   ProcessingError,
   ProcessingErrorCode,
@@ -60,6 +61,44 @@ export async function transformRdfc(
     documentLoader: options.documentLoader,
   })
 
+  return canonicalDocument
+}
+
+/**
+ * Transform an unsecured input document into a transformed document that is ready to be provided as input to the
+ * hashing algorithm.
+ *
+ * @param {Credential} unsecuredDocument An unsecured input document to transform.
+ * @param {object} options A set of options to use when transforming the document.
+ *
+ * @returns {string} A transformed data document.
+ *
+ * @see https://www.w3.org/TR/vc-di-ecdsa/#transformation-ecdsa-jcs-2019
+ */
+export function transformJcs(unsecuredDocument: Credential, options: {
+  proof: Proof
+}): string {
+  // Procedure:
+  //
+  // 1. If `options.type` is not set to the string `DataIntegrityProof`, and `options.cryptosuite` is not set to the
+  //    string `ecdsa-jcs-2019`, an error MUST be raised that SHOULD convey an error type of
+  //    `PROOF_TRANSFORMATION_ERROR`.
+  // 2. Let `canonicalDocument` be the result of applying the JSON Canonicalization Scheme (JCS) to a JSON serialization
+  //    of the `unsecuredDocument`.
+  // 3. Return `canonicalDocument` as the transformed data document.
+
+  if (
+    options.proof.type !== SUITE_CONSTANT.GENERAL_PROOF_TYPE ||
+    options.proof.cryptosuite !== SUITE_CONSTANT.SUITE_JCS
+  ) {
+    throw new ProcessingError(
+      ProcessingErrorCode.PROOF_TRANSFORMATION_ERROR,
+      "suite/core#transformJCS",
+      "The proof type or cryptosuite is not supported.",
+    )
+  }
+
+  const canonicalDocument = jcs.canonize(unsecuredDocument)
   return canonicalDocument
 }
 
@@ -123,6 +162,51 @@ export async function configRdfc(
 }
 
 /**
+ * Generate a proof configuration from a set of proof options that is used as input to the proof hashing algorithm.
+ *
+ * @param {object} options A set of proof options to generate a proof configuration from.
+ *
+ * @returns {string} A proof configuration.
+ *
+ * @see https://www.w3.org/TR/vc-di-ecdsa/#proof-configuration-ecdsa-jcs-2019
+ */
+export function configJcs(options: {
+  proof: Proof
+}): string {
+  // Procedure:
+  //
+  // 1. Let `proofConfig` be a clone of the `options` object.
+  // 2. If `proofConfig.type` is not set to the string `DataIntegrityProof`, or `proofConfig.cryptosuite` is not set to
+  //    the string `ecdsa-jcs-2019`, an error MUST be raised that SHOULD convey an error type of
+  //    `PROOF_GENERATION_ERROR`.
+  // 3. If `proofConfig.created` is present and set to a value that is not valid datetime, an error MUST be raised
+  //    and SHOULD convey an error type of `PROOF_GENERATION_ERROR`.
+  // 4. Let `canonicalProofConfig` be the result of applying the JSON Canonicalization Scheme (JCS) to `proofConfig`.
+  // 5. Return `canonicalProofConfig` as the proof configuration.
+
+  const proofConfig = structuredClone(options.proof)
+
+  if (proofConfig.type !== SUITE_CONSTANT.GENERAL_PROOF_TYPE || proofConfig.cryptosuite !== SUITE_CONSTANT.SUITE_JCS) {
+    throw new ProcessingError(
+      ProcessingErrorCode.PROOF_GENERATION_ERROR,
+      "suite/core#configJCS",
+      "The proof type or cryptosuite is not supported.",
+    )
+  }
+
+  if (proofConfig.created && !Date.parse(proofConfig.created)) {
+    throw new ProcessingError(
+      ProcessingErrorCode.PROOF_GENERATION_ERROR,
+      "suite/core#configJCS",
+      "The proof creation date is not a valid datetime.",
+    )
+  }
+
+  const canonicalProofConfig = jcs.canonize(proofConfig)
+  return canonicalProofConfig
+}
+
+/**
  * Cryptographically hash a transformed data document and proof configuration into cryptographic hash data that is
  * ready to be provided as input to the proof serialization algorithm and proof verification algorithm.
  *
@@ -136,6 +220,7 @@ export async function configRdfc(
  * @returns {Promise<Uint8Array>} Resolve to a single hash data represented as series of bytes.
  *
  * @see https://www.w3.org/TR/vc-di-ecdsa/#hashing-ecdsa-rdfc-2019
+ * @see https://www.w3.org/TR/vc-di-ecdsa/#hashing-ecdsa-jcs-2019
  */
 export async function hash(
   transformedDocument: string,
@@ -181,6 +266,7 @@ export async function hash(
  * @returns {Promise<Uint8Array>} Resolve to a serialized digital proof.
  *
  * @see https://www.w3.org/TR/vc-di-ecdsa/#proof-serialization-ecdsa-rdfc-2019
+ * @see https://www.w3.org/TR/vc-di-ecdsa/#proof-serialization-ecdsa-jcs-2019
  */
 export async function serialize(
   hashData: Uint8Array,
@@ -242,6 +328,7 @@ export async function serialize(
  * @returns {Promise<boolean>} Resolve to a verification result.
  *
  * @see https://www.w3.org/TR/vc-di-ecdsa/#proof-verification-ecdsa-rdfc-2019
+ * @see https://www.w3.org/TR/vc-di-ecdsa/#proof-verification-ecdsa-jcs-2019
  */
 export async function verify(
   hashData: Uint8Array,
