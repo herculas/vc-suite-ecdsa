@@ -61,7 +61,11 @@ export async function createDisclosureData(
   proof: Proof,
   selectivePointers: Array<string>,
   options?:
-    & { curve?: Curve; urnScheme?: URNScheme; randomString?: string }
+    & {
+      curve?: Curve
+      urnScheme?: URNScheme
+      randomString?: string
+    }
     & Expand
     & Compact
     & ToRdf

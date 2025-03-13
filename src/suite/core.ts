@@ -1,12 +1,10 @@
 import {
-  type Canonize,
-  type Compact,
   type Credential,
   document,
-  type Expand,
   format,
   type HMAC,
   jcs,
+  type JsonLdObject,
   type LoadDocumentCallback,
   multi,
   ProcessingError,
@@ -14,12 +12,11 @@ import {
   type Proof,
   rdfc,
   selective,
-  type ToRdf,
   type URNScheme,
 } from "@herculas/vc-data-integrity"
 
 import { constructHasher } from "../utils/crypto.ts"
-import { createDisclosureData, serializeSignData } from "../selective/prepare.ts"
+import { createDisclosureData, createVerifyData, serializeSignData } from "../selective/prepare.ts"
 import { Curve } from "../constant/curve.ts"
 import { ECKeypair } from "../key/keypair.ts"
 import { keyToMaterial, materialToMultibase, materialToPublicKey, multibaseToMaterial } from "../key/core.ts"
@@ -405,19 +402,14 @@ export async function verifyRdfcJcs(
  */
 export async function transformSd(
   unsecuredDocument: Credential,
-  options:
-    & {
-      curve: Curve
-      proof: Proof
-      mandatoryPointers: Array<string>
-      documentLoader: LoadDocumentCallback
-      urnScheme?: URNScheme
-      randomString?: string
-    }
-    & Expand
-    & Compact
-    & ToRdf
-    & Partial<Canonize>,
+  options: {
+    curve: Curve
+    proof: Proof
+    mandatoryPointers: Array<string>
+    documentLoader: LoadDocumentCallback
+    urnScheme?: URNScheme
+    randomString?: string
+  },
 ): Promise<TransformedDocument> {
   // Procedure:
   //
@@ -697,8 +689,7 @@ export async function serializeSd(
  * disclosed details.
  *
  * @param {Credential} document A verifiable credential to derive a selective disclosure proof from.
- * @param {} proof A base proof to derive a selective disclosure proof from.
- * @param {Array<string>} selectivePointers An array of JSON pointers to the properties to selectively disclose.
+ * @param {Proof} proof A base proof to derive a selective disclosure proof from.
  * @param {object} options A set of options to use when deriving the selective disclosure proof.
  *
  * @see https://www.w3.org/TR/vc-di-ecdsa/#add-derived-proof-ecdsa-sd-2023
@@ -706,30 +697,22 @@ export async function serializeSd(
 export async function deriveSd(
   document: Credential,
   proof: Proof,
-  selectivePointers: Array<string>,
-  options:
-    & {
-      curve: Curve
-      urnScheme?: URNScheme
-      randomString?: string
-      documentLoader: LoadDocumentCallback
-    }
-    & Expand
-    & Compact
-    & ToRdf
-    & Partial<Canonize>,
-): Promise<Proof> {
+  options: {
+    curve: Curve
+    documentLoader: LoadDocumentCallback
+    selectivePointers: Array<string>
+    urnScheme?: URNScheme
+    randomString?: string
+  },
+): Promise<string> {
   // Procedure:
   //
   // 1. Initialize `baseSignature`, `publicKey`, `signatures`, `labelMap`, `mandatoryIndexes`, `revealDocument` to the
   //    values associated with their property names in the object returned when calling the `createDisclosureData`
   //    function, passing the `document`, `proof`, `selectivePointers`, and any custom JSON-LD API options, such as a
   //    document loader.
-  // 2. Initialize `newProof` to a shallow copy of `proof`.
   // 3. Replace `proofValue` in `newProof` with the result of calling the `serializeDerivedProofValue` function, passing
   //    `baseSignature`, `publicKey`, `signatures`, `labelMap`, and `mandatoryIndexes`.
-  // 4. Set the value of the `proof` property in `revealDocument` to `newProof`.
-  // 5. Return `revealDocument` as the selectively revealed document.
 
   const {
     baseSignature,
@@ -737,46 +720,44 @@ export async function deriveSd(
     signatures,
     labelMap,
     mandatoryIndexes,
-  } = await createDisclosureData(document, proof, selectivePointers, options)
-  const newProof = structuredClone(proof)
-  newProof.proofValue = serializeDerivedProofValue({
+  } = await createDisclosureData(document, proof, options.selectivePointers, options)
+  return serializeDerivedProofValue({
     baseSignature,
     publicKey,
     signatures,
     labelMap,
     mandatoryIndexes,
   })
-  return newProof
 }
 
 /**
  * Verify a selective disclosed signature.
  *
- * @param {Uint8Array} baseSignature The base signature to verify.
- * @param {Array<Uint8Array>} signatures The selective disclosed signatures to verify.
- * @param {CryptoKey} publicKey The public key to use for verification.
+ * @param {JsonLdObject} unsecuredDocument An unsecured input document to verify the selective disclosed signature.
+ * @param {Proof} proof A selective disclosed signature to verify.
  * @param {object} options A set of options to use when verifying the selective disclosed signature.
  *
  * @see https://www.w3.org/TR/vc-di-ecdsa/#verify-derived-proof-ecdsa-sd-2023
  */
 export async function verifySd(
-  toVerify: Uint8Array,
-  nonMandatory: Array<string>,
-  baseSignature: Uint8Array,
-  signatures: Array<Uint8Array>,
-  publicKey: Uint8Array,
+  unsecuredDocument: JsonLdObject,
+  proof: Proof,
   options: {
     curve: Curve
-    proof: Proof
     documentLoader: LoadDocumentCallback
   },
 ): Promise<boolean> {
   // Procedure:
   //
+  // 2. Initialize `baseSignature`, `proofHash`, `publicKey`, `signatures`, `nonMandatory`, and `mandatoryHash` to the
+  //    values associated with their property names in the object returned when calling the `createVerifyData`
+  //    function, passing the `document`, `proof`, and any custom JSON-LD API options, such as a document loader.
   // 3. If the length of `signatures` does not match the length of `nonMandatory`, an error MUST be raised and SHOULD
   //    convey an error type of `PROOF_VERIFICATION_ERROR`, indicating that the signature count does not match the
   //    non-mandatory message count.
   // 4. Initialize `publicKeyBytes` to the public key bytes expressed in `publicKey`.
+  // 5. Initialize `toVerify` to the result of calling the `serializeSignData` function, passing `proofHash`,
+  //    `publicKey`, and `mandatoryHash`.
   // 6. Initialize `verified` to `true`.
   // 7. Initialize `verificationCheck` be the result of applying the verification algorithm of the Elliptic Curve
   //    Digital Signature Algorithm (ECDSA) [FIPS-186-5], with `toVerify` as the data to be verified against the
@@ -791,6 +772,15 @@ export async function verifySd(
   //
   // 9. Return `verified` as the verification result.
 
+  const {
+    baseSignature,
+    proofHash,
+    publicKey,
+    signatures,
+    nonMandatory,
+    mandatoryHash,
+  } = await createVerifyData(unsecuredDocument, proof, options)
+
   if (signatures.length !== nonMandatory.length) {
     throw new ProcessingError(
       ProcessingErrorCode.PROOF_VERIFICATION_ERROR,
@@ -799,8 +789,12 @@ export async function verifySd(
     )
   }
 
+  const publicKeyMultibase = multi.base58btc.encode(publicKey)
+  const publicKeyMaterial = multibaseToMaterial(publicKeyMultibase, "public", options.curve)
+  const publicCryptoKey = await materialToPublicKey(publicKeyMaterial, options.curve)
+
   const method = await document.retrieveVerificationMethod(
-    options.proof.verificationMethod!,
+    proof.verificationMethod!,
     new Set(),
     { documentLoader: options.documentLoader },
   )
@@ -827,6 +821,8 @@ export async function verifySd(
     )
   }
 
+  const toVerify = serializeSignData(proofHash, publicKey, mandatoryHash)
+
   let verified: boolean = true
   const verificationCheck = await crypto.subtle.verify(
     { name: SUITE_CONSTANT.ALGORITHM, hash: hashName },
@@ -837,10 +833,6 @@ export async function verifySd(
   if (!verificationCheck) {
     verified = false
   }
-
-  const publicKeyMultibase = multi.base58btc.encode(publicKey)
-  const publicKeyMaterial = multibaseToMaterial(publicKeyMultibase, "public", options.curve)
-  const publicCryptoKey = await materialToPublicKey(publicKeyMaterial, options.curve)
 
   const verificationChecks = await Promise.all(signatures.map((signature, index) =>
     crypto.subtle.verify(
