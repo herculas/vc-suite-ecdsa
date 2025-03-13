@@ -15,7 +15,7 @@ import {
   type URNScheme,
 } from "@herculas/vc-data-integrity"
 
-import { constructHasher } from "../utils/crypto.ts"
+import { constructHasher, curveToDigestAlgorithm } from "../utils/crypto.ts"
 import { createDisclosureData, createVerifyData, serializeSignData } from "../selective/prepare.ts"
 import { Curve } from "../constant/curve.ts"
 import { ECKeypair } from "../key/keypair.ts"
@@ -298,21 +298,9 @@ export async function serializeRdfcJcs(
     )
   }
 
-  let hashName: string
-  if (options.curve === Curve.P256) {
-    hashName = "SHA-256"
-  } else if (options.curve === Curve.P384) {
-    hashName = "SHA-384"
-  } else {
-    throw new ProcessingError(
-      ProcessingErrorCode.PROOF_GENERATION_ERROR,
-      "suite/core#serializeRdfcJcs",
-      `The specified ${options.curve} curve is not supported.`,
-    )
-  }
-
+  const algorithm = curveToDigestAlgorithm(options.curve)
   const proofBytes = await crypto.subtle.sign(
-    { name: SUITE_CONSTANT.ALGORITHM, hash: { name: hashName } },
+    { name: SUITE_CONSTANT.ALGORITHM, hash: algorithm },
     keypair.privateKey,
     hashData,
   )
@@ -363,21 +351,9 @@ export async function verifyRdfcJcs(
     )
   }
 
-  let hashName: string
-  if (options.curve === Curve.P256) {
-    hashName = "SHA-256"
-  } else if (options.curve === Curve.P384) {
-    hashName = "SHA-384"
-  } else {
-    throw new ProcessingError(
-      ProcessingErrorCode.PROOF_GENERATION_ERROR,
-      "suite/core#verifyRdfcJcs",
-      `The specified ${options.curve} curve is not supported.`,
-    )
-  }
-
+  const algorithm = curveToDigestAlgorithm(options.curve)
   const result = await crypto.subtle.verify(
-    { name: SUITE_CONSTANT.ALGORITHM, hash: { name: hashName } },
+    { name: SUITE_CONSTANT.ALGORITHM, hash: algorithm },
     keypair.publicKey,
     proofBytes,
     hashData,
@@ -442,13 +418,17 @@ export async function transformSd(
     )
   }
 
-  const hmacCryptoKey = await crypto.subtle.generateKey(
-    { name: "HMAC", hash: options.curve },
+  const algorithm = curveToDigestAlgorithm(options.curve)
+  const rawHmacKey = crypto.getRandomValues(new Uint8Array(32))
+  const hmacKey = await crypto.subtle.importKey(
+    "raw",
+    rawHmacKey,
+    { name: "HMAC", hash: algorithm },
     true,
     ["sign", "verify"],
   )
   const hmac: HMAC = async (data: Uint8Array) =>
-    new Uint8Array(await crypto.subtle.sign(hmacCryptoKey.algorithm, hmacCryptoKey, data))
+    new Uint8Array(await crypto.subtle.sign({ name: "HMAC", hash: algorithm }, hmacKey, data))
   const labelMapFactoryFunction = selective.createHmacIdLabelMapFunction(hmac)
 
   const groupDefinitions: Map<string, Array<string>> = new Map([
@@ -463,15 +443,13 @@ export async function transformSd(
 
   const mandatory = groups.get("mandatory")?.matching!
   const nonMandatory = groups.get("mandatory")?.nonMatching!
-  const hmacKey = new Uint8Array(await crypto.subtle.exportKey("raw", hmacCryptoKey))
 
-  const transformedDocument = {
+  return {
     mandatoryPointers: options.mandatoryPointers,
     mandatory,
     nonMandatory,
-    hmacKey,
+    hmacKey: rawHmacKey,
   }
-  return transformedDocument
 }
 
 /**
@@ -625,20 +603,22 @@ export async function serializeSd(
 
   const { proofHash, mandatoryHash, mandatoryPointers, nonMandatory, hmacKey } = hashData
 
-  const proofScopedKeyPair = new ECKeypair(Curve.P256)
+  const localCurve = Curve.P256
+  const localAlgorithm = curveToDigestAlgorithm(localCurve)
+  const proofScopedKeyPair = new ECKeypair(localCurve)
   await proofScopedKeyPair.initialize()
 
   const signatures = await Promise.all([...nonMandatory.values()].map(async (nQuad) => {
     const signature = await crypto.subtle.sign(
-      { name: SUITE_CONSTANT.ALGORITHM, hash: "SHA-256" },
+      { name: SUITE_CONSTANT.ALGORITHM, hash: localAlgorithm },
       proofScopedKeyPair.privateKey!,
       new TextEncoder().encode(nQuad),
     )
     return new Uint8Array(signature)
   }))
 
-  const publicKeyMaterial = await keyToMaterial(proofScopedKeyPair.publicKey!, "public", options.curve)
-  const publicKeyMultibase = materialToMultibase(publicKeyMaterial, "public", options.curve)
+  const publicKeyMaterial = await keyToMaterial(proofScopedKeyPair.publicKey!, "public", localCurve)
+  const publicKeyMultibase = materialToMultibase(publicKeyMaterial, "public", localCurve)
   const publicKey = multi.base58btc.decode(publicKeyMultibase)
   const toSign = serializeSignData(proofHash, publicKey, mandatoryHash)
 
@@ -654,21 +634,9 @@ export async function serializeSd(
     )
   }
 
-  let hashName: string
-  if (options.curve === Curve.P256) {
-    hashName = "SHA-256"
-  } else if (options.curve === Curve.P384) {
-    hashName = "SHA-384"
-  } else {
-    throw new ProcessingError(
-      ProcessingErrorCode.PROOF_GENERATION_ERROR,
-      "suite/core#serializeSd",
-      `The specified ${options.curve} curve is not supported.`,
-    )
-  }
-
+  const algorithm = curveToDigestAlgorithm(options.curve)
   const baseSignatureBytes = await crypto.subtle.sign(
-    { name: SUITE_CONSTANT.ALGORITHM, hash: hashName },
+    { name: SUITE_CONSTANT.ALGORITHM, hash: algorithm },
     keypair.privateKey,
     toSign,
   )
@@ -721,6 +689,9 @@ export async function deriveSd(
     labelMap,
     mandatoryIndexes,
   } = await createDisclosureData(document, proof, options.selectivePointers, options)
+
+  // console.log("mandatory indexes: ", mandatoryIndexes)
+
   return serializeDerivedProofValue({
     baseSignature,
     publicKey,
@@ -807,25 +778,12 @@ export async function verifySd(
     )
   }
 
-  let hashName: string
-  if (options.curve === Curve.P256) {
-    hashName = "SHA-256"
-  }
-  if (options.curve === Curve.P384) {
-    hashName = "SHA-384"
-  } else {
-    throw new ProcessingError(
-      ProcessingErrorCode.PROOF_GENERATION_ERROR,
-      "suite/core#verifySd",
-      `The specified ${options.curve} curve is not supported.`,
-    )
-  }
-
+  const algorithm = curveToDigestAlgorithm(options.curve)
   const toVerify = serializeSignData(proofHash, publicKey, mandatoryHash)
 
   let verified: boolean = true
   const verificationCheck = await crypto.subtle.verify(
-    { name: SUITE_CONSTANT.ALGORITHM, hash: hashName },
+    { name: SUITE_CONSTANT.ALGORITHM, hash: algorithm },
     keypair.publicKey,
     baseSignature,
     toVerify,
@@ -836,7 +794,7 @@ export async function verifySd(
 
   const verificationChecks = await Promise.all(signatures.map((signature, index) =>
     crypto.subtle.verify(
-      { name: SUITE_CONSTANT.ALGORITHM, hash: hashName },
+      { name: SUITE_CONSTANT.ALGORITHM, hash: algorithm },
       publicCryptoKey,
       signature,
       new TextEncoder().encode(nonMandatory[index]),

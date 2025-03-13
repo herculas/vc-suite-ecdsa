@@ -1,7 +1,7 @@
 {
   "version": "4",
   "specifiers": {
-    "jsr:@herculas/vc-data-integrity@~0.10.3": "0.10.3",
+    "jsr:@herculas/vc-data-integrity@~0.10.5": "0.10.5",
     "jsr:@scure/base@^1.2.4": "1.2.4",
     "jsr:@std/assert@1": "1.0.11",
     "jsr:@std/internal@^1.0.5": "1.0.5",
@@ -10,8 +10,8 @@
     "npm:rdf-canonize@^4.0.1": "4.0.1"
   },
   "jsr": {
-    "@herculas/vc-data-integrity@0.10.3": {
-      "integrity": "3bae077e8a733f9345720a0a3da3bc2141a497be44f22c817d473784cf57c26b",
+    "@herculas/vc-data-integrity@0.10.5": {
+      "integrity": "c74a1671cb2807b56c7d8ff00e19498bbc68669883433d6913288b61a76588bd",
       "dependencies": [
         "jsr:@scure/base",
         "jsr:@std/assert",
@@ -142,7 +142,7 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@herculas/vc-data-integrity@~0.10.3",
+      "jsr:@herculas/vc-data-integrity@~0.10.5",
       "jsr:@std/assert@1",
       "npm:cbor2@^1.12.0"
     ]

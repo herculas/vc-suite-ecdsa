@@ -18,6 +18,7 @@ import {
 import { Curve } from "../constant/curve.ts"
 import { parseBaseProofValue, parseDerivedProofValue } from "./serialize.ts"
 import type { DisclosureData, VerifyData } from "./types.ts"
+import { curveToDigestAlgorithm } from "../utils/crypto.ts"
 
 /**
  * Serialize the data that is to be signed by the private key associated with the base proof verification method.
@@ -127,10 +128,11 @@ export async function createDisclosureData(
 
   const curve = options?.curve ?? Curve.P256
   const { baseSignature, publicKey, hmacKey, signatures, mandatoryPointers } = parseBaseProofValue(proof.proofValue!)
+  const algorithm = curveToDigestAlgorithm(curve)
   const hmacCryptoKey = await crypto.subtle.importKey(
     "raw",
     hmacKey,
-    { name: "HMAC", hash: curve },
+    { name: "HMAC", hash: algorithm },
     true,
     ["sign", "verify"],
   )
@@ -154,6 +156,11 @@ export async function createDisclosureData(
   const mandatoryGroup = groups.get("mandatory")!
   const selectiveGroup = groups.get("selective")!
   const combinedGroup = groups.get("combined")!
+
+  // console.log("combined group: ", combinedGroup.matching.keys())
+  // console.log("mandatory group: ", mandatoryGroup.matching.keys())
+  // console.log("non mandatory group: ")
+  // console.log("selective group: ", selectiveGroup.matching.keys())
 
   let relativeIndex = 0
   const mandatoryIndexes: Array<number> = []
@@ -242,7 +249,8 @@ export async function createVerifyData(
   //    `nonMandatory`, and `mandatoryHash`.
 
   const curve = options?.curve ?? Curve.P256
-  const hasher: Hasher = async (data: Uint8Array) => new Uint8Array(await crypto.subtle.digest(curve, data))
+  const algorithm = curveToDigestAlgorithm(curve)
+  const hasher: Hasher = async (data: Uint8Array) => new Uint8Array(await crypto.subtle.digest(algorithm, data))
   const proofHashPromise = _hashCanonizedProof(document, proof, hasher, options)
 
   const { baseSignature, publicKey, signatures, labelMap, mandatoryIndexes } = parseDerivedProofValue(proof.proofValue!)
