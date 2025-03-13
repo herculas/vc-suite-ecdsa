@@ -1,11 +1,11 @@
 import {
-  base58btc,
   type Credential,
   Cryptosuite,
   type JsonLdDocument,
-  type Loader,
+  type LoadDocumentCallback,
+  multi,
   type Proof,
-  type Result,
+  type Verification,
 } from "@herculas/vc-data-integrity"
 
 import type { Curve } from "../constant/curve.ts"
@@ -43,7 +43,7 @@ export class EcdsaRdfc2019 extends Cryptosuite {
     options: {
       curve: Curve
       proof: Proof
-      documentLoader: Loader
+      documentLoader: LoadDocumentCallback
     },
   ): Promise<Proof> {
     // Procedure:
@@ -64,10 +64,10 @@ export class EcdsaRdfc2019 extends Cryptosuite {
 
     const canonicalProofConfig = await core.configRdfc(unsecuredDocument as Credential, options)
     const canonicalDocument = await core.transformRdfc(unsecuredDocument as Credential, options)
-    const hashData = await core.hash(canonicalDocument, canonicalProofConfig, options.curve)
-    const proofBytes = await core.serialize(hashData, options)
+    const hashData = await core.hashRdfcJcs(canonicalDocument, canonicalProofConfig, { curve: options.curve })
+    const proofBytes = await core.serializeRdfcJcs(hashData, options)
 
-    proof.proofValue = base58btc.encode(proofBytes)
+    proof.proofValue = multi.base58btc.encode(proofBytes)
     return proof
   }
 
@@ -85,9 +85,9 @@ export class EcdsaRdfc2019 extends Cryptosuite {
     securedDocument: JsonLdDocument,
     options: {
       curve: Curve
-      documentLoader: Loader
+      documentLoader: LoadDocumentCallback
     },
-  ): Promise<Result.Verification> {
+  ): Promise<Verification> {
     // Procedure:
     //
     // 1. Let `unsecuredDocument` be a copy of `securedDocument` with the `proof` property removed.
@@ -112,13 +112,13 @@ export class EcdsaRdfc2019 extends Cryptosuite {
     const proofOptions = structuredClone(securedCredential.proof) as Proof
     delete proofOptions.proofValue
 
-    const proofBytes = base58btc.decode((securedCredential.proof as Proof).proofValue!)
+    const proofBytes = multi.base58btc.decode((securedCredential.proof as Proof).proofValue!)
     const transformOptions = { proof: proofOptions, documentLoader: options.documentLoader, curve: options.curve }
 
     const canonicalDocument = await core.transformRdfc(unsecuredCredential, transformOptions)
     const canonicalProofConfig = await core.configRdfc(unsecuredCredential, transformOptions)
-    const hashData = await core.hash(canonicalDocument, canonicalProofConfig, options.curve)
-    const verified = await core.verify(hashData, proofBytes, transformOptions)
+    const hashData = await core.hashRdfcJcs(canonicalDocument, canonicalProofConfig, { curve: options.curve })
+    const verified = await core.verifyRdfcJcs(hashData, proofBytes, transformOptions)
 
     return {
       verified,

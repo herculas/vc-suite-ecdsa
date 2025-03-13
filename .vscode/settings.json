@@ -1,7 +1,10 @@
 {
   "cSpell.words": [
+    "bnode",
+    "CBOR",
     "cryptosuite",
     "denoland",
+    "deskolemized",
     "herculas",
     "JWKEC",
     "KEYPAIR",
@@ -10,6 +13,7 @@
     "Multikey",
     "Rdfc",
     "URDNA",
+    "urlnopad",
     "varint"
   ]
 }

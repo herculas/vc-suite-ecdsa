@@ -1,7 +1,7 @@
 import { assert, assertEquals } from "@std/assert"
 import { type Credential, format, type Proof } from "@herculas/vc-data-integrity"
 
-import { configRdfc, hash, serialize, transformRdfc, verify } from "../src/suite/core.ts"
+import { configRdfc, hashRdfcJcs, serializeRdfcJcs, transformRdfc, verifyRdfcJcs } from "../src/suite/core.ts"
 import { Curve } from "../src/constant/curve.ts"
 import { EcdsaRdfc2019 } from "../src/suite/rdfc.ts"
 import { EcdsaJcs2019 } from "../src/suite/jcs.ts"
@@ -23,7 +23,7 @@ Deno.test("ECDSA-RDFC-2019 document and proof hashing", async () => {
   const canonicalProofConfig = await configRdfc(unsecuredCredential, transformOptions)
 
   const curve = Curve.P256
-  const hashData = await hash(canonicalDocument, canonicalProofConfig, curve)
+  const hashData = await hashRdfcJcs(canonicalDocument, canonicalProofConfig, { curve })
 
   const expectedDocumentHash = "517744132ae165a5349155bef0bb0cf2258fff99dfe1dbd914b938d775a36017"
   const expectedProofHash = "3a8a522f689025727fb9d1f0fa99a618da023e8494ac74f51015d009d35abc2e"
@@ -40,8 +40,8 @@ Deno.test("ECDSA-RDFC-2019 proof creation and verification", async () => {
 
   const curve = Curve.P256
   const options = { curve, proof: proofOptions, documentLoader: testLoader }
-  const proofBytes = await serialize(format.hexToBytes(hashData), options)
-  const result = await verify(format.hexToBytes(hashData), proofBytes, options)
+  const proofBytes = await serializeRdfcJcs(format.hexToBytes(hashData), options)
+  const result = await verifyRdfcJcs(format.hexToBytes(hashData), proofBytes, options)
 
   assert(result)
 })

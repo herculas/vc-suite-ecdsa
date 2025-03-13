@@ -1,25 +1,42 @@
-/**
- * Hash a string with SHA-256 algorithm.
- *
- * @param {string} str The string to be hashed.
- *
- * @returns {Promise<Uint8Array>} Resolve to the hash value.
- */
-export async function sha256(str: string): Promise<Uint8Array> {
-  const bytes = new TextEncoder().encode(str)
-  const digest = await crypto.subtle.digest("SHA-256", bytes)
-  return new Uint8Array(digest)
-}
+import { type Hasher, ImplementationError, ImplementationErrorCode } from "@herculas/vc-data-integrity"
+import { Curve } from "../constant/curve.ts"
 
 /**
- * Hash a string with SHA-384 algorithm.
+ * Construct a hasher based given the elliptic curve.
  *
- * @param {string} str The string to be hashed.
+ * @param {Curve} curve An elliptic curve.
  *
- * @returns {Promise<Uint8Array>} Resolve to the hash value.
+ * @returns {Hasher} A hasher instance.
  */
-export async function sha384(str: string): Promise<Uint8Array> {
-  const bytes = new TextEncoder().encode(str)
-  const digest = await crypto.subtle.digest("SHA-384", bytes)
-  return new Uint8Array(digest)
+export function constructHasher(curve: Curve): Hasher {
+  if (!Object.values(Curve).includes(curve)) {
+    throw new ImplementationError(
+      ImplementationErrorCode.ENCODING_ERROR,
+      "utils/crypto#constructHasher",
+      `Invalid curve: ${curve} is not supported by this implementation.`,
+    )
+  }
+
+  let algorithm: string
+  switch (curve) {
+    case Curve.P256:
+      algorithm = "SHA-256"
+      break
+    case Curve.P384:
+      algorithm = "SHA-384"
+      break
+    default:
+      throw new ImplementationError(
+        ImplementationErrorCode.ENCODING_ERROR,
+        "utils/crypto#constructHasher",
+        `Invalid curve: ${curve} is not supported by this implementation"`,
+      )
+  }
+
+  const hasher: Hasher = async (data: Uint8Array): Promise<Uint8Array> => {
+    const digest = await crypto.subtle.digest(algorithm, data)
+    return new Uint8Array(digest)
+  }
+
+  return hasher
 }

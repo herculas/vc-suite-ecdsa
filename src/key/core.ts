@@ -1,12 +1,11 @@
 import {
-  base58btc,
-  base64url,
+  type Flag,
   format,
   ImplementationError,
   ImplementationErrorCode,
   type JWK,
   type JWKEC,
-  type KeypairOptions,
+  multi,
   type VerificationMethodJwk,
   type VerificationMethodMultibase,
 } from "@herculas/vc-data-integrity"
@@ -42,7 +41,7 @@ export async function generateRawKeypair(curve: Curve): Promise<CryptoKeyPair> {
 export async function getJwkThumbprint(jwk: JWK): Promise<string> {
   const data = new TextEncoder().encode(JSON.stringify(jwk))
   const hash = await crypto.subtle.digest("SHA-256", data)
-  return base64url.encode(new Uint8Array(hash))
+  return multi.base64url.encode(new Uint8Array(hash))
 }
 
 /**
@@ -67,14 +66,14 @@ export async function getJwkThumbprint(jwk: JWK): Promise<string> {
  * public. It should be noted that this operation will remove the DER prefix from the key material.
  *
  * @param {CryptoKey} key A `CryptoKey` instance.
- * @param {KeypairOptions.Flag} flag The flag to determine if the key is private or public.
+ * @param {Flag} flag The flag to determine if the key is private or public.
  * @param {Curve} curve The curve to use for the keypair.
  *
  * @returns {Promise<Uint8Array>} Resolve to the uncompressed key material.
  */
 export async function keyToMaterial(
   key: CryptoKey,
-  flag: KeypairOptions.Flag,
+  flag: Flag,
   curve: Curve,
 ): Promise<Uint8Array> {
   const realCurve = (key.algorithm as EcKeyAlgorithm).namedCurve as Curve
@@ -131,14 +130,14 @@ export async function keyToMaterial(
  * Encode a key material into a multibase string.
  *
  * @param {Uint8Array} material The key material in `Uint8Array` format.
- * @param {KeypairOptions.Flag} flag The flag to determine if the key is private or public.
+ * @param {Flag} flag The flag to determine if the key is private or public.
  * @param {Curve} curve The curve to use for the keypair.
  *
  * @returns {string} The key material encoded in multibase format.
  */
 export function materialToMultibase(
   material: Uint8Array,
-  flag: KeypairOptions.Flag,
+  flag: Flag,
   curve: Curve,
 ): string {
   const multibasePrefixHex = PREFIX_CONSTANT.MULTIBASE.get(flag)?.get(curve)
@@ -179,20 +178,20 @@ export function materialToMultibase(
 
   const multibasePrefix = format.hexToBytes(multibasePrefixHex)
   const multibaseMaterial = format.concatenate(multibasePrefix, compressedMaterial)
-  return base58btc.encode(multibaseMaterial)
+  return multi.base58btc.encode(multibaseMaterial)
 }
 
 /**
  * Export an ECDSA keypair instance into a verification method containing a keypair in multibase format.
  *
  * @param {ECKeypair} keypair An ECDSA keypair instance.
- * @param {KeypairOptions.Flag} flag The flag to determine if the key is private or public.
+ * @param {Flag} flag The flag to determine if the key is private or public.
  *
  * @returns {Promise<VerificationMethodMultibase>} Resolve to a verification method containing a multibase key.
  */
 export async function keypairToMultibase(
   keypair: ECKeypair,
-  flag: KeypairOptions.Flag,
+  flag: Flag,
 ): Promise<VerificationMethodMultibase> {
   // check the controller and identifier
   if (!keypair.controller || !keypair.id) {
@@ -252,11 +251,11 @@ export async function keypairToMultibase(
  * the key is private, the `d` field is included in the JWK object.
  *
  * @param {CryptoKey} key A `CryptoKey` instance.
- * @param {KeypairOptions.Flag} flag The flag to determine if the key is private or public.
+ * @param {Flag} flag The flag to determine if the key is private or public.
  *
  * @returns {Promise<JWKEC>} Resolve to an object representing a JSON Web Key.
  */
-export async function keyToJwk(key: CryptoKey, flag: KeypairOptions.Flag): Promise<JWKEC> {
+export async function keyToJwk(key: CryptoKey, flag: Flag): Promise<JWKEC> {
   const jwk = await crypto.subtle.exportKey("jwk", key)
 
   return {
@@ -276,13 +275,13 @@ export async function keyToJwk(key: CryptoKey, flag: KeypairOptions.Flag): Promi
  * Export an ECDSA keypair instance into a verification method containing a keypair in `JWK` format.
  *
  * @param {ECKeypair} keypair An ECDSA keypair instance.
- * @param {KeypairOptions.Flag} flag The flag to determine if the key is private or public.
+ * @param {Flag} flag The flag to determine if the key is private or public.
  *
  * @returns {Promise<VerificationMethodJwk>} Resolve to a verification method containing a JSON Web Key.
  */
 export async function keypairToJwk(
   keypair: ECKeypair,
-  flag: KeypairOptions.Flag,
+  flag: Flag,
 ): Promise<VerificationMethodJwk> {
   // check the controller and identifier
   if (!keypair.controller || !keypair.id) {
@@ -398,17 +397,17 @@ export async function multibaseToKeypair(
  * against the multibase prefix according to the specification.
  *
  * @param {string} multibase A multibase encoded private or public key material.
- * @param {KeypairOptions.Flag} flag The flag to determine if the key is private or public.
+ * @param {Flag} flag The flag to determine if the key is private or public.
  * @param {Curve} curve The curve to use for the keypair.
  *
  * @returns {Uint8Array} The compressed key material in `Uint8Array` format.
  */
 export function multibaseToMaterial(
   multibase: string,
-  flag: KeypairOptions.Flag,
+  flag: Flag,
   curve: Curve,
 ): Uint8Array {
-  const multibaseMaterial = base58btc.decode(multibase)
+  const multibaseMaterial = multi.base58btc.decode(multibase)
   const multibasePrefixHex = PREFIX_CONSTANT.MULTIBASE.get(flag)?.get(curve)
   const materialLength = SUITE_CONSTANT.KEY_COMPRESSED_LENGTH.get(flag)?.get(curve)
 
@@ -455,7 +454,7 @@ export async function materialToPrivateKey(
   curve: Curve,
 ): Promise<CryptoKey> {
   const usage: KeyUsage[] = ["sign"]
-  const flag: KeypairOptions.Flag = "private"
+  const flag: Flag = "private"
   const materialLength = SUITE_CONSTANT.KEY_COMPRESSED_LENGTH.get(flag)?.get(curve)
 
   if (!materialLength) {
@@ -474,7 +473,7 @@ export async function materialToPrivateKey(
     ext: true,
     x: "",
     y: "",
-    d: base64url.encode(material),
+    d: multi.base64url.encode(material),
   }
 
   return await crypto.subtle.importKey(
@@ -499,7 +498,7 @@ export async function materialToPublicKey(
   material: Uint8Array,
   curve: Curve,
 ): Promise<CryptoKey> {
-  const flag: KeypairOptions.Flag = "public"
+  const flag: Flag = "public"
   const keyFormat = SUITE_CONSTANT.KEY_FORMAT.get(flag)
   const materialLength = SUITE_CONSTANT.KEY_COMPRESSED_LENGTH.get(flag)?.get(curve)
   const derPrefixHex = PREFIX_CONSTANT.DER_COMPRESSED.get(flag)?.get(curve)
@@ -560,7 +559,7 @@ export async function jwkToKeypair(
 ): Promise<ECKeypair> {
   const keypair = new ECKeypair(curve, verificationMethod.id, verificationMethod.controller, expires, revoked)
 
-  const innerImport = async (jwk: JWK, flag: KeypairOptions.Flag, inCurve: Curve) => {
+  const innerImport = async (jwk: JWK, flag: Flag, inCurve: Curve) => {
     let convertedJwk: JWKEC
     try {
       convertedJwk = jwk as JWKEC
@@ -612,11 +611,11 @@ export async function jwkToKeypair(
  * the key is private, the `d` field MUST be provided in the `jwk` input.
  *
  * @param {JWKEC} jwk An object representing a JSON Web Key.
- * @param {KeypairOptions.Flag} flag The flag to determine if the key is private or public.
+ * @param {Flag} flag The flag to determine if the key is private or public.
  *
  * @returns {Promise<CryptoKey>} Resolve to a `CryptoKey` instance.
  */
-export async function jwkToKey(jwk: JWKEC, flag: KeypairOptions.Flag): Promise<CryptoKey> {
+export async function jwkToKey(jwk: JWKEC, flag: Flag): Promise<CryptoKey> {
   const defaultUsage = flag === "private" ? ["sign"] : ["verify"]
   const keyUsage = (jwk.key_ops || defaultUsage) as KeyUsage[]
   const secret = flag === "private" ? jwk.d : undefined

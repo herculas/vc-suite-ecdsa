@@ -1,4 +1,4 @@
-import type { KeypairOptions } from "@herculas/vc-data-integrity"
+import type { Flag } from "@herculas/vc-data-integrity"
 
 import { Curve } from "./curve.ts"
 
@@ -154,7 +154,7 @@ const PRIVATE_KEY_COMPRESSED_256 = "3067020100301306072a8648ce3d020106082a8648ce
  */
 const PRIVATE_KEY_COMPRESSED_384 = "308184020100301006072a8648ce3d020106052b81040022046d306b0201010430"
 
-export const MULTIBASE: Map<KeypairOptions.Flag, Map<Curve, string>> = new Map([
+export const MULTIBASE: Map<Flag, Map<Curve, string>> = new Map([
   [
     "public",
     new Map([
@@ -171,7 +171,7 @@ export const MULTIBASE: Map<KeypairOptions.Flag, Map<Curve, string>> = new Map([
   ],
 ])
 
-export const DER_COMPRESSED: Map<KeypairOptions.Flag, Map<Curve, string>> = new Map([
+export const DER_COMPRESSED: Map<Flag, Map<Curve, string>> = new Map([
   [
     "public",
     new Map([
@@ -188,7 +188,7 @@ export const DER_COMPRESSED: Map<KeypairOptions.Flag, Map<Curve, string>> = new 
   ],
 ])
 
-export const DER_UNCOMPRESSED: Map<KeypairOptions.Flag, Map<Curve, string>> = new Map([
+export const DER_UNCOMPRESSED: Map<Flag, Map<Curve, string>> = new Map([
   [
     "public",
     new Map([
@@ -204,3 +204,18 @@ export const DER_UNCOMPRESSED: Map<KeypairOptions.Flag, Map<Curve, string>> = ne
     ]),
   ],
 ])
+
+/**
+ * The ECDSA-SD base proof header.
+ */
+export const CBOR_BASE = "d95d00"
+
+/**
+ * The ECDSA-SD derived proof header.
+ */
+export const CBOR_DERIVED = "d95d01"
+
+/**
+ * The prefix of a blank node identifier.
+ */
+export const BLANK_LABEL = "c14n"

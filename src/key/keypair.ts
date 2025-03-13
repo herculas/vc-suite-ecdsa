@@ -1,9 +1,10 @@
 import {
   document,
+  type Export,
   ImplementationError,
   ImplementationErrorCode,
+  type Import,
   Keypair,
-  type KeypairOptions,
   loader,
   type URI,
   VC_BASE_URL,
@@ -101,11 +102,11 @@ export class ECKeypair extends Keypair {
   /**
    * Export the serialized representation of the keypair, along with other metadata which can be used to form a proof.
    *
-   * @param {KeypairOptions.Export} [options] The options to export the keypair.
+   * @param {Export} [options] The options to export the keypair.
    *
    * @returns {Promise<VerificationMethod>} Resolve to a verification method containing the serialized keypair.
    */
-  override export(options?: KeypairOptions.Export): Promise<VerificationMethod> {
+  override export(options?: Export): Promise<VerificationMethod> {
     // set default options
     options = options ?? {}
     options.flag ||= "public"
@@ -209,6 +210,6 @@ export class ECKeypair extends Keypair {
 /**
  * The options for importing an elliptic curve keypair, adding the curve parameter.
  */
-export interface ECImportOptions extends KeypairOptions.Import {
+export interface ECImportOptions extends Import {
   curve?: Curve
 }
