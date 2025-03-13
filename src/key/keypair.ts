@@ -148,13 +148,13 @@ export class ECKeypair extends Keypair {
    * Import an elliptic curve keypair from a verification method document.
    *
    * @param {VerificationMethod} inputDocument A verification method document fetched from an external source.
-   * @param {ECImportOptions} [options] Options for keypair import.
+   * @param {object} [options] Options for keypair import.
    *
    * @returns {Promise<ECKeypair>} Resolve to an elliptic curve keypair instance.
    */
   static override async import(
     inputDocument: VerificationMethod,
-    options?: ECImportOptions,
+    options?: Import & { curve?: Curve },
   ): Promise<ECKeypair> {
     // set default options
     options = options ?? {}
@@ -205,11 +205,4 @@ export class ECKeypair extends Keypair {
       )
     }
   }
-}
-
-/**
- * The options for importing an elliptic curve keypair, adding the curve parameter.
- */
-export interface ECImportOptions extends Import {
-  curve?: Curve
 }

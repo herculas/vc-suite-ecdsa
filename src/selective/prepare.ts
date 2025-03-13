@@ -157,11 +157,6 @@ export async function createDisclosureData(
   const selectiveGroup = groups.get("selective")!
   const combinedGroup = groups.get("combined")!
 
-  // console.log("combined group: ", combinedGroup.matching.keys())
-  // console.log("mandatory group: ", mandatoryGroup.matching.keys())
-  // console.log("non mandatory group: ")
-  // console.log("selective group: ", selectiveGroup.matching.keys())
-
   let relativeIndex = 0
   const mandatoryIndexes: Array<number> = []
   for (const absoluteIndex of combinedGroup.matching.keys()) {

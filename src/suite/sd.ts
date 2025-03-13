@@ -35,6 +35,8 @@ export class EcdsaSd2023 extends Cryptosuite {
    * @param {object} options A set of options to use when creating the proof.
    *
    * @returns {Promise<Proof>} Resolve to a base data integrity proof.
+   *
+   * @see https://www.w3.org/TR/vc-di-ecdsa/#create-base-proof-ecdsa-sd-2023
    */
   static override async createProof(
     unsecuredDocument: JsonLdDocument,

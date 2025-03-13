@@ -108,27 +108,68 @@ Deno.test("ECDSA-SD-2023: case 3 (P-384)", async () => {
 
   const proof = await EcdsaSd2023.createProof(unsecuredCredential, createOptions)
 
-  // const securedCredential = structuredClone(unsecuredCredential)
-  // securedCredential.proof = proof
+  const securedCredential = structuredClone(unsecuredCredential)
+  securedCredential.proof = proof
 
-  // const selectivePointers = ["/validFrom", "/validUntil", "/credentialSubject/birthCountry"]
-  // const deriveOptions = {
-  //   curve,
-  //   documentLoader: testLoader,
-  //   selectivePointers,
-  // }
+  const selectivePointers = ["/validFrom", "/validUntil", "/credentialSubject/birthCountry"]
+  const deriveOptions = {
+    curve,
+    documentLoader: testLoader,
+    selectivePointers,
+  }
 
-  // const derived = await EcdsaSd2023.deriveProof(securedCredential, deriveOptions)
+  const derived = await EcdsaSd2023.deriveProof(securedCredential, deriveOptions)
 
-  // const revealedPointers = mandatoryPointers.concat(selectivePointers)
-  // const revealedCredential = selective.selectJsonLd(revealedPointers, securedCredential) as Credential
-  // revealedCredential.proof = derived
+  const revealedPointers = mandatoryPointers.concat(selectivePointers)
+  const revealedCredential = selective.selectJsonLd(revealedPointers, securedCredential) as Credential
+  revealedCredential.proof = derived
 
-  // const verifyOptions = {
-  //   curve,
-  //   documentLoader: testLoader,
-  // }
+  const verifyOptions = {
+    curve,
+    documentLoader: testLoader,
+  }
 
-  // const result = await EcdsaSd2023.verifyProof(revealedCredential, verifyOptions)
-  // assert(result.verified)
+  const result = await EcdsaSd2023.verifyProof(revealedCredential, verifyOptions)
+  assert(result.verified)
+})
+
+Deno.test("ECDSA-SD-2023: case 4 (P-384)", async () => {
+  const unsecuredCredential = structuredClone(UNSECURED_CRED_3.default) as Credential
+  const proofOptions = structuredClone(PROOF_OPTIONS_6.default) as Proof
+
+  const mandatoryPointers = ["/issuer"]
+  const curve = Curve.P384
+
+  const createOptions = {
+    curve,
+    proof: proofOptions,
+    mandatoryPointers,
+    documentLoader: testLoader,
+  }
+
+  const proof = await EcdsaSd2023.createProof(unsecuredCredential, createOptions)
+
+  const securedCredential = structuredClone(unsecuredCredential)
+  securedCredential.proof = proof
+
+  const selectivePointers = ["/validFrom", "/validUntil", "/credentialSubject/birthCountry"]
+  const deriveOptions = {
+    curve,
+    documentLoader: testLoader,
+    selectivePointers,
+  }
+
+  const derived = await EcdsaSd2023.deriveProof(securedCredential, deriveOptions)
+
+  const revealedPointers = mandatoryPointers.concat(selectivePointers)
+  const revealedCredential = selective.selectJsonLd(revealedPointers, securedCredential) as Credential
+  revealedCredential.proof = derived
+
+  const verifyOptions = {
+    curve,
+    documentLoader: testLoader,
+  }
+
+  const result = await EcdsaSd2023.verifyProof(revealedCredential, verifyOptions)
+  assert(result.verified)
 })

@@ -4,7 +4,7 @@ import type { BaseProofValue, CompressedProofValue } from "./types.ts"
 
 export function assertBaseProofValue(components: unknown): BaseProofValue {
   assert(Array.isArray(components) && components.length === 5)
-  assert(isUint8Array(components[0], 64))
+  assert(isUint8Array(components[0], 64) || isUint8Array(components[0], 96))
   assert(isUint8Array(components[1], 35))
   assert(isUint8Array(components[2], 32))
   assert(Array.isArray(components[3]) && components[3].every((signature) => isUint8Array(signature, 64)))
@@ -20,7 +20,7 @@ export function assertBaseProofValue(components: unknown): BaseProofValue {
 
 export function assertCompressedProofValue(components: unknown): CompressedProofValue {
   assert(Array.isArray(components) && components.length === 5)
-  assert(isUint8Array(components[0], 64))
+  assert(isUint8Array(components[0], 64) || isUint8Array(components[0], 96))
   assert(isUint8Array(components[1], 35))
   assert(Array.isArray(components[2]) && components[2].every((signature) => isUint8Array(signature)))
   assert(

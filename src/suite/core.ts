@@ -689,9 +689,6 @@ export async function deriveSd(
     labelMap,
     mandatoryIndexes,
   } = await createDisclosureData(document, proof, options.selectivePointers, options)
-
-  // console.log("mandatory indexes: ", mandatoryIndexes)
-
   return serializeDerivedProofValue({
     baseSignature,
     publicKey,
@@ -760,10 +757,6 @@ export async function verifySd(
     )
   }
 
-  const publicKeyMultibase = multi.base58btc.encode(publicKey)
-  const publicKeyMaterial = multibaseToMaterial(publicKeyMultibase, "public", options.curve)
-  const publicCryptoKey = await materialToPublicKey(publicKeyMaterial, options.curve)
-
   const method = await document.retrieveVerificationMethod(
     proof.verificationMethod!,
     new Set(),
@@ -792,9 +785,15 @@ export async function verifySd(
     verified = false
   }
 
+  const localCurve = Curve.P256
+  const localAlgorithm = curveToDigestAlgorithm(localCurve)
+  const publicKeyMultibase = multi.base58btc.encode(publicKey)
+  const publicKeyMaterial = multibaseToMaterial(publicKeyMultibase, "public", localCurve)
+  const publicCryptoKey = await materialToPublicKey(publicKeyMaterial, localCurve)
+
   const verificationChecks = await Promise.all(signatures.map((signature, index) =>
     crypto.subtle.verify(
-      { name: SUITE_CONSTANT.ALGORITHM, hash: algorithm },
+      { name: SUITE_CONSTANT.ALGORITHM, hash: localAlgorithm },
       publicCryptoKey,
       signature,
       new TextEncoder().encode(nonMandatory[index]),
