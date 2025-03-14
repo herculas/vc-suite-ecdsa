@@ -6,6 +6,7 @@
     "Cryptosuites",
     "denoland",
     "deskolemized",
+    "FIPS",
     "herculas",
     "JWKEC",
     "KEYPAIR",
@@ -13,6 +14,7 @@
     "multicodec",
     "Multikey",
     "Rdfc",
+    "secp",
     "URDNA",
     "urlnopad",
     "varint"
