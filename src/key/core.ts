@@ -46,9 +46,9 @@ export async function getJwkThumbprint(jwk: JWK): Promise<string> {
 
 /**
  * Export a `CryptoKey` instance to a verification method document. The key is stored in the exported document in either
- * `JWK` or `multibase` format, specified by the `type` field in the document. The `multibase` or `JWK` generated from
- * the above process will ultimately be wrapped into a verification method document, along with other metadata
- * associated with that key, such as the controller, identifier, and expiration date.
+ * `JsonWebKey` or `Multikey` format, specified by the `type` field in the document. The `JsonWebKey` or `Multikey` 
+ * generated from the above process will ultimately be wrapped into a verification method document, along with other 
+ * metadata associated with that key, such as the controller, identifier, and expiration date.
  *
  * The flowchart below briefly illustrates this export process:
  *
@@ -337,7 +337,7 @@ export async function keypairToJwk(
 
 /**
  * Import a verification method document into a `CryptoKey` instance. The key is stored in the verification method
- * document in either JSON Web Key or multibase format, as specified by the type field in the document.
+ * document in either `JsonWebKey` or `Multikey` format, as specified by the `type` field in the document.
  *
  * The flowchart below briefly illustrates this export process:
  *                                                                                           materialToPublicKey
